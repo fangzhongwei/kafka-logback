@@ -32,7 +32,6 @@ class KafkaAppender extends AppenderBase[ILoggingEvent] {
     init
   }
 
-
   override def stop(): Unit = {
     super.stop()
     if (producer != null) {
