@@ -2,6 +2,7 @@ package com.lawsofnatrue.logback
 
 import java.util.Properties
 
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.AppenderBase
 import org.apache.kafka.clients.producer._
@@ -13,23 +14,30 @@ import org.slf4j.{Logger, LoggerFactory}
 class KafkaAppender extends AppenderBase[ILoggingEvent] {
   val logger: Logger = LoggerFactory.getLogger(getClass)
 
+  var encoder: PatternLayoutEncoder = null
   var producer: Producer[String, String] = null
-
   var producerProperties: String = ""
   var topic: String = ""
 
   private var connected: Boolean = false
 
   override def append(e: ILoggingEvent): Unit = {
-    val message: String = e.getFormattedMessage
     if (connected) {
-      producer.send(new ProducerRecord(topic, message))
+      producer.send(new ProducerRecord(topic, encoder.getLayout.doLayout(e)))
     }
   }
 
   override def start(): Unit = {
     super.start()
     init
+  }
+
+
+  override def stop(): Unit = {
+    super.stop()
+    if (producer != null) {
+      producer.close()
+    }
   }
 
   def init: Unit = {
@@ -42,6 +50,9 @@ class KafkaAppender extends AppenderBase[ILoggingEvent] {
   }
 
   def checkConfig: Unit = {
+    if (encoder == null) {
+      throw new Exception("encoder must be config")
+    }
     if (producerProperties == null || producerProperties.trim.length == 0) {
       throw new Exception("producerProperties cannot be empty")
     }
@@ -62,7 +73,7 @@ class KafkaAppender extends AppenderBase[ILoggingEvent] {
             Thread.sleep(5000)
             init
           } else {
-            logger.error("connect kafka success")
+            logger.info("connect kafka success")
             connected = true
           }
         }
@@ -94,5 +105,10 @@ class KafkaAppender extends AppenderBase[ILoggingEvent] {
   def setTopic(topic: String): Unit = {
     logger.info("topic is :" + topic)
     this.topic = topic
+  }
+
+  def setEncoder(encoder: PatternLayoutEncoder): Unit = {
+    logger.info("encoder layout is :" + encoder.getLayout)
+    this.encoder = encoder
   }
 }
