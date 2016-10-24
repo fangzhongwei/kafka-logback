@@ -65,7 +65,7 @@ class KafkaAppender extends AppenderBase[ILoggingEvent] {
     try {
       val props: Properties = parseProducerConfig
       producer = new KafkaProducer[String, String](props)
-      producer.send(new ProducerRecord("server-startup", "member-server"), new Callback {
+      producer.send(new ProducerRecord("kafka-heartbeat", "kafka alive ?"), new Callback {
         override def onCompletion(recordMetadata: RecordMetadata, e: Exception): Unit = {
           if (e != null) {
             logger.error("connect kafka error", e)
