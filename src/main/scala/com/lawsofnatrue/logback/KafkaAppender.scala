@@ -12,10 +12,11 @@ import org.slf4j.{Logger, LoggerFactory}
   * Created by fangzhongwei on 2016/10/18.
   */
 class KafkaAppender extends AppenderBase[ILoggingEvent] {
+  //todo 使用特定名字的logger
   val logger: Logger = LoggerFactory.getLogger(getClass)
 
-  var encoder: PatternLayoutEncoder = null
-  var producer: Producer[String, String] = null
+  var encoder: PatternLayoutEncoder = _
+  var producer: Producer[String, String] = _
   var producerProperties: String = ""
   var topic: String = ""
 
@@ -39,7 +40,7 @@ class KafkaAppender extends AppenderBase[ILoggingEvent] {
     }
   }
 
-  def init: Unit = {
+  def init(): Unit = {
     checkConfig
     new Thread(new Runnable {
       override def run(): Unit = {
